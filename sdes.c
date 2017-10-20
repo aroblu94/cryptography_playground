@@ -1,4 +1,4 @@
-#include <sdes.h>
+#include "sdes.h"
 
 /*************/
 /** S-BOXes **/
@@ -18,7 +18,7 @@ static const uint8_t S2[2][8] = {
 /** UTILS **/
 /***********/
 uint16_t string_to_hex(char* string) {
-	return (uint16_t) strtol(string, NULL, 2);
+	return (uint16_t) strtoul(string, NULL, 2);
 }
 
 void print_bits(uint16_t hex, int dim) {
@@ -93,14 +93,14 @@ uint8_t feistel(uint8_t r, uint8_t k) {
 	right = expanded & 0x0f;
 
 	sbox_left = S1[(left & 0x08) >> 3][left & 0x7];
-	sbox_right = S2[(right & 0x08) >> 3][left & 0x7];
+	sbox_right = S2[(right & 0x08) >> 3][right & 0x7];
 
 	#ifdef DEBUG
     printf("# feistel(R, K):\t");
-    print_bits(((sbox_left << 4) | sbox_right), 6);
+    print_bits(((sbox_left << 3) | sbox_right), 6);
     #endif
 
-	return (uint8_t) (sbox_left << 4) | sbox_right;
+	return (uint8_t) (sbox_left << 3) | sbox_right;
 }
 
 /* 
@@ -140,4 +140,63 @@ uint16_t swap_left_right(uint16_t in) {
     out |= (in & 0xfc0) >> 6;
     
     return out;
+}
+
+
+/*****************************/
+/** ENCRIPTION & DECRIPTION **/
+/*****************************/
+uint16_t encrypt(const uint16_t text, const uint16_t key) {
+    uint16_t cryptotext;
+    uint8_t round_key;
+    int i;
+    
+    #ifdef DEBUG
+    printf("# DEBUG MODE: ENCRYPTION ###########\n");
+    #endif
+    
+    cryptotext = text;
+    
+    for (i=FIRSTROUND; i<=LASTROUND; ++i) {
+        #ifdef DEBUG
+        printf("# ROUND %d --------------------------\n", i);
+        #endif
+        round_key = gen_key(key, i);
+        cryptotext = exec_round(cryptotext, round_key);
+    }
+    
+    #ifdef DEBUG
+    printf("####################################\n");
+    #endif
+    
+    cryptotext = swap_left_right(cryptotext);
+    return cryptotext;
+}
+
+uint16_t decrypt(const uint16_t cryptotext, const uint16_t key) {
+    uint16_t text;
+    uint8_t round_key;
+    int i;
+    
+    text = swap_left_right(cryptotext);
+    
+    #ifdef DEBUG
+    printf("# DEBUG MODE: DECRYPTION ###########\n");
+    #endif
+    
+    text = cryptotext;
+    for (i=LASTROUND; i>=FIRSTROUND; --i) {
+        #ifdef DEBUG
+        printf("# ROUND %d --------------------------\n", i);
+        #endif
+        round_key = gen_key(key, i);
+        text = exec_round(text, round_key);
+    }
+    
+    #ifdef DEBUG
+    printf("####################################\n");
+    #endif
+    
+    text = swap_left_right(text);
+    return text;
 }

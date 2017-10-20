@@ -5,8 +5,9 @@
 #ifndef __SDES_H__
 #define __SDES_H__
 
-#define FIRSTROUND  1
+#define FIRSTROUND  2
 #define LASTROUND   4
+#define DEBUG 1
 
 /* Utils */
 uint16_t string_to_hex(char* string);
