@@ -5,7 +5,7 @@
 #ifndef __SDES_H__
 #define __SDES_H__
 
-#define FIRSTROUND  2
+#define FIRSTROUND  1
 #define LASTROUND   4
 #define DEBUG 1
 
