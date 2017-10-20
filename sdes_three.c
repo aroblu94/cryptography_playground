@@ -1,4 +1,4 @@
-#include "sdes.h"
+#include "sdes_three.h"
 
 /*************/
 /** S-BOXes **/

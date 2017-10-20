@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "sdes.c"
+#include "sdes_three.c"
 
 /*
  * Please modify FIRSTROUND in sdes.h to 2
