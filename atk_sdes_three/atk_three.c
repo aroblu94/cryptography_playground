@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "utils.c"
-#include "sdes_three.c"
 
-#define ATKDEBUG 1
+#include "atk_three.h"
+#include "../sdes_three/sdes_three.c"
 
 /*
  * Shift n mod m
