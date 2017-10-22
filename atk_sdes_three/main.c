@@ -5,7 +5,7 @@
 #include "atk_three.c"
 
 /*
- * Cryptanalysis of S-DES
+ * Differential cryptoanalysis of S-DES
  * (3 rounds DES)
  */
 int main(int argc, char* argv[]) {

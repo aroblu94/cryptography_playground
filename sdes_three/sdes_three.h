@@ -7,7 +7,7 @@
 
 #define FIRSTROUND  2
 #define LASTROUND   4
-//#define DEBUG 1
+// #define DEBUG 1
 
 /* Utils */
 uint16_t string_to_hex(char* string);

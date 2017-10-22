@@ -21,6 +21,8 @@ int main(int argc, char *argv[]) {
 
 	cryptotext = encrypt(plaintext, key);
 	res = decrypt(cryptotext, key);
+	printf("CRYPTOTEXT:\n");
+	print_bits(cryptotext,12);
 	printf("PLAINTEXT:\n");
 	print_bits(res,12);
 
