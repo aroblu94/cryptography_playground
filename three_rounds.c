@@ -11,7 +11,7 @@
 int main(int argc, char *argv[]) {
 	char plaintext_string[] = "000111011011";
 	char key_string[] = "001001101";
-	uint16_t cryptotext, plaintext, key;
+	uint16_t cryptotext, plaintext, key, res;
 
 	plaintext = string_to_hex(plaintext_string);
 	key = string_to_hex(key_string);
@@ -20,6 +20,11 @@ int main(int argc, char *argv[]) {
 	print_bits(key, 9);
 
 	cryptotext = encrypt(plaintext, key);
+	res = decrypt(cryptotext, key);
+	printf("CRYPTOTEXT:\n");
+	print_bits(cryptotext,12);
+	printf("\nPLAINTEXT:\n");
+	print_bits(res,12);
 
 	return 0;
 }

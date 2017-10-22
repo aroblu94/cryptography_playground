@@ -169,7 +169,7 @@ uint16_t encrypt(const uint16_t text, const uint16_t key) {
     printf("####################################\n");
     #endif
     
-    cryptotext = swap_left_right(cryptotext);
+    //cryptotext = swap_left_right(cryptotext);
     return cryptotext;
 }
 
@@ -197,6 +197,6 @@ uint16_t decrypt(const uint16_t cryptotext, const uint16_t key) {
     printf("####################################\n");
     #endif
     
-    text = swap_left_right(text);
+    //text = swap_left_right(text);
     return text;
 }
