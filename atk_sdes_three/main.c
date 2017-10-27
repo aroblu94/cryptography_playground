@@ -37,9 +37,9 @@ int main(int argc, char* argv[]) {
 	// So we have just to bruteforce the most-significant-key bit (0 or 1)
 	// NOTE: 
 	// 	In order to get the real key we have to
-	// 	shift the founded key right by 2 (mod 9).
+	// 	shift the founded key right by 2 (mod 9)
+	//	because we're doing the attack to the 3rd round key.
 	// 	shift_bits does this.
-	// 	DUNNO WHY WE HAVE TO DO THAT.
 	k1 = shift_bits(0 << 8 | k8b, 9, 2);
 	k2 = shift_bits(1 << 8 | k8b, 9, 2);
 	printf("\n9-BIT KEYs (shifted by >> 2):\n");
