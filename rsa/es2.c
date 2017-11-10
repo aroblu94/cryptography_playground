@@ -13,38 +13,15 @@
 #include <stdio.h>
 #include <gmp.h>
 #include <string.h>
-#include <stdint.h>
-
-int euclid[3];
-
-int* extendedEuclid(int a,int b){ /* implementation of extended Euclid algorithm */
-	if(b==0){
-		euclid[0]=a;
-		euclid[1]=1;
-		euclid[2]=0;
-		int *p=&euclid;
-		return p;
-	}
-	int *p;
-	p=extendedEuclid(b,a%b);
-	euclid[0]=*p;
-	euclid[1]=*(p+1);
-	euclid[2]=*(p+2);
-	int temp;
-	temp=euclid[2];
-	euclid[2]=euclid[1]-(a/b)*euclid[2];
-	euclid[1]=temp;
-	p=&euclid;
-	return p;
-}
+#include <stdlib.h>
 
 int main(void) {
 	// => This is a Common Modules Attack!
 
 	char *result;
 	int tmp,len;
-	mpz_t n,ea,eb,ca,cb,c,x,y,r,m;
-	mpz_inits(n,ea,eb,ca,cb,c,x,y,r,m,NULL);
+	mpz_t n,ea,eb,ca,cb,c,r,m,s,rest;
+	mpz_inits(n,ea,eb,ca,cb,c,r,m,s,rest,NULL);
 	mpz_set_str(n,"734832328116465196692838283564479145339399316070744350481249855342603693301556011015131519",10);
 	mpz_set_str(ea,"17",10);
 	mpz_set_str(eb,"2",10);
@@ -55,36 +32,39 @@ int main(void) {
 
 	// Trying to solve ea*x + eb*y = 1
 
-	// GCD
-	mpz_gcd(c,ea,eb);
-	mpz_cdiv_r_ui(r,c,1);
-	if(mpz_cmp_ui(r,0)!=0) {
+	// Expanded Euclid
+	mpz_gcdext(c, r, s, ea, eb);
+	// Check on GCD
+	mpz_cdiv_r_ui(rest,c,1);
+	if(mpz_cmp_ui(rest,0)!=0) {
 		printf("ERROR: c != GCD(ea,eb)\n");
 		return 1;
 	}
-
-	int *p;
-	p=extendedEuclid(17,2^16+1);
-	printf("Extended Euclide results: %d %d\n",*(p+1),*(p+2));
 
 	// At this point we should have
 	// r = *(p+1)
 	// s = *(p+2)
 	// Lets find plaintext!
-	if(mpz_invert(ca,ca,n)) {
-		tmp = abs(*(p+2));
-		printf("cA invertibile! tmp: %d\n",tmp);
-		mpz_pow_ui(ca,ca,tmp);
-		mpz_pow_ui(cb,cb,*(p+1));
+	mpz_powm(ca, ca, r, n);
+	mpz_powm(cb, cb, s, n);
+	//M = ca^r * cb^s mod n
+	mpz_mul(m, ca, cb);
+	mpz_mod(m, m, n);
+
+	gmp_printf("M: %Zd\n",m);
+	result = mpz_get_str(result, 10, m);
+
+	// Is result ASCII readable?
+	// If yes print it
+	if (strlen(result) % 3 != 0)
+		return 1;
+	while (*result != '\0') {
+		char string_3l[4] = {'\0'};
+		strncpy(string_3l, result, 3);
+		putchar(atoi(string_3l));
+		result += 3;
 	}
-	else if(mpz_invert(ca,ca,n)) {
-		tmp = abs(*(p+2));
-		printf("cB invertibile! tmp: %d\n",tmp);
-		mpz_pow_ui(cb,cb,abs(*(p+2)));
-		mpz_pow_ui(ca,ca,*(p+1));
-	}
-	mpz_mul(n,ca,cb);
-	gmp_printf("M: %Zd\n",n);
+	printf("\n");
 
 	return 0;
 }
