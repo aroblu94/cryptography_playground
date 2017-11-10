@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "atk_three.h"
-#include "../sdes_three/sdes_three.c"
+#include "sdes_three.c"
 
 /*
  * Shift n mod m

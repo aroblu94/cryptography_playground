@@ -7,11 +7,11 @@
 
 #define FIRSTROUND  2
 #define LASTROUND   4
-// #define DEBUG 1
+// #define DEBUGTHREE 1
 
 /* Utils */
 uint16_t string_to_hex(char* string);
-void print_bits (uint16_t hex, int dim);
+void print_bits(uint16_t hex, int dim);
 
 /*S-DES functions*/
 uint8_t expansion(uint8_t r);
