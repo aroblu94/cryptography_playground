@@ -1,30 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <gmp.h>
 
 int main(int argc, char **argv) {
-	if(argc<4) {
-		printf("ERROR!\nUsage: ./main seed seed_base random_length\n");
+	if(argc<2) {
+		printf("ERROR!\nUsage: ./main random_length\n");
 		return -1;
 	}
 
-	int seed_base,length;
+	int length, int_seed;
 	mpz_t random, seed;
 	gmp_randstate_t state;
 
+	srand(time(NULL));
+
 	// Init
 	mpz_inits(random,seed,NULL);
+	int_seed = rand();
 
-	// Get the seed from argv
-	seed_base = atoi(argv[2]);
-	mpz_set_str(seed, argv[1], seed_base);
+	mpz_set_ui(seed, int_seed);
 
 	// Set the seed
 	gmp_randinit_default(state);
 	gmp_randseed(state, seed);
 
 	// Gen the random!
-	length = atoi(argv[3]);
+	length = atoi(argv[1]);
 	mpz_urandomb(random, state, length);
 	gmp_printf("%Zd\n",random);
 
