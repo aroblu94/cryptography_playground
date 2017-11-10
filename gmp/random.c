@@ -4,20 +4,21 @@
 #include <gmp.h>
 
 int main(int argc, char **argv) {
-	if(argc<2) {
-		printf("ERROR!\nUsage: ./main random_length\n");
-		return -1;
-	}
+	// if(argc<2) {
+	// 	printf("ERROR!\nUsage: ./main random_length\n");
+	// 	return -1;
+	// }
 
 	int length, int_seed;
 	mpz_t random, seed;
 	gmp_randstate_t state;
 
-	srand(time(NULL));
-
 	// Init
-	mpz_inits(random,seed,NULL);
+	srand(time(NULL));
 	int_seed = rand();
+	length = (rand()%5000)+3000;
+	mpz_inits(random,seed,NULL);
+
 
 	mpz_set_ui(seed, int_seed);
 
@@ -26,7 +27,7 @@ int main(int argc, char **argv) {
 	gmp_randseed(state, seed);
 
 	// Gen the random!
-	length = atoi(argv[1]);
+	//length = atoi(argv[1]);
 	mpz_urandomb(random, state, length);
 	gmp_printf("%Zd\n",random);
 
