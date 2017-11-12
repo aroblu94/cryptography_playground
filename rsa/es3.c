@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <gmp.h>
 #include <string.h>
-#include <stdint.h>
 
 #define DEBUG 0
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
