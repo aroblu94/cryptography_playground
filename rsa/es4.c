@@ -18,7 +18,7 @@
 #include <gmp.h>
 
 #define DEBUG 1
-#define MLD 100
+#define MLD 100000
 #define LIST "list.bin"
 #define SORTED "sorted.bin"
 #define WRITE "wb"
@@ -76,6 +76,7 @@ int main(void) {
 	mpz_mod(m, m, n);
 	gmp_printf("M: %Zd\n", m);
 
+	mpz_clears(n,e,c,m,tmpa,yval,tmpb,NULL);
 	return 0;
 }
 
@@ -92,34 +93,36 @@ void fp_read(FILE* fp, long pos, mpz_t num) {
 	fp = fopen(LIST, READ);
 	char *buff = (char*) malloc(sizeof(char) * 8);
 	char *tmp = (char*) malloc(sizeof(char) * 2);
-	char *str = (char*) malloc(sizeof(char) * 8);
+	char *str = (char*) malloc(sizeof(char) * 9);
+	str[0] = '\0';
 	if(fseek(fp, pos, SEEK_SET) != 0)
 		printf("Seek error\n");
 	fread(buff,8,1,fp);
 	for(int i=0; i<8; i++) {
     	sprintf(tmp,"%02x", (buff[i] & 0xff));
-    	strcat(str,tmp);
+    	str = strcat(str,tmp);
 	}
 	mpz_set_str(num,str,16);
 	free(buff);
 	free(tmp);
+	free(str);
 	fclose(fp);
 }
 
 void populateDB(FILE* fp, mpz_t n, mpz_t e) {
 	if(DEBUG) { printf("------- DEBUGGING populateDB() ------\n"); }
 	mpz_t tmp1,tmp2,tmp3;
-	mpz_inits(tmp1,tmp2,NULL);
+	mpz_inits(tmp1,tmp2,tmp3,NULL);
 	for(int i=0; i<MLD; i++) {
 		mpz_set_ui(tmp1,i+1);
 		mpz_powm(tmp2,tmp1,e,n);
 		fp_write(fp, i*8, tmp2);
 		if(DEBUG) {
-			mpz_init(tmp3);
 			fp_read(fp, i*8, tmp3);
 			gmp_printf("\t[%d]: %Zx\n",i,tmp3); 
 		}
 	}
+	mpz_clears(tmp1,tmp2,tmp3,NULL);
 	if(DEBUG) { printf("-------------------------------------\n"); }
 }
 
