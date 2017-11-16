@@ -52,9 +52,6 @@ int main(void) {
 	int x,y;
 	mpz_t n,e,c,m,tmpa,tmpb;
 	mpz_inits(n,e,c,m,tmpa,tmpb,NULL);
-	//mpz_set_str(n,"618240007109027021",10);
-	// mpz_set_str(e,"65537",10);
-	// mpz_set_str(c,"254665136275622757",10);
 
 	// SPEED UP PROCESS
 	// RSA with 16bit key
@@ -73,7 +70,7 @@ int main(void) {
 	printf("-------------------- RESULT  --------------------\n");
 	printf("x: %d - y: %d\n", x,y);
 
-	// At this point we have big[x]==small[y]:
+	// At this point we have giant[x]==small[y]:
 	// c*x^(-e) mod n == y^e mod n
 	// => C = y^e * x^e = (x*y)^e
 	// => M = x*y
