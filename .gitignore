@@ -1,3 +1,7 @@
+# Bin files - except for db.bin
+*.bin
+!db.bin
+
 # Prerequisites
 *.d
 
