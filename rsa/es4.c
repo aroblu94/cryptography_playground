@@ -1,10 +1,10 @@
 /*
  * KPUB = (618240007109027021, 65537)
  * C = 254665136275622757
- * 
+ *
  * C is too short, we can easily find M
  *
- * Idea: 
+ * Idea:
  * - generate 10^9 y^e mod n
  * - save them into a file
  * - order them into the file
@@ -27,7 +27,11 @@
 #include <string.h>
 #include <gmp.h>
 
-#include "rsa16.c"
+// RSA key length in bit and byte
+#define NBIT 64
+#define NBYTE 8
+#include "rsa.c"
+
 
 #define DEBUG 0
 #define MLD 1000
@@ -55,8 +59,8 @@ int main(void) {
 
 	// SPEED UP PROCESS
 	// RSA with 16bit key
-	rsa16pub(n,e);
-	mpz_set_str(m,"5234",10);
+	rsaGetPub(n,e);
+	mpz_set_str(m,"12345",10);
 	gmp_printf("M: %Zd\n", m);
 	// C = m^e mod n
 	mpz_powm(c,m,e,n);
@@ -86,8 +90,8 @@ int main(void) {
 
 void fp_write(FILE* fp, long pos, mpz_t num) {
 	fp = fopen(LIST, APPEND);
-	char *buff = (char*) malloc(sizeof(char) * 8);
-	mpz_export(buff, NULL, 1, 8, 1, 0, num);
+	char *buff = (char*) malloc(sizeof(char) * NBYTE);
+	mpz_export(buff, NULL, 1, NBYTE, 1, 0, num);
 	fwrite(buff,sizeof(buff),1,fp);
 	free(buff);
 	fclose(fp);
@@ -95,14 +99,15 @@ void fp_write(FILE* fp, long pos, mpz_t num) {
 
 void fp_read(FILE* fp, long pos, mpz_t num) {
 	fp = fopen(LIST, READ);
-	char *buff = (char*) malloc(sizeof(char) * 8);
+	int plusone = NBYTE + 1;
+	char *buff = (char*) malloc(sizeof(char) * NBYTE);
 	char *tmp = (char*) malloc(sizeof(char) * 2);
-	char *str = (char*) malloc(sizeof(char) * 9);
+	char *str = (char*) malloc(sizeof(char) * plusone);
 	str[0] = '\0';
 	if(fseek(fp, pos, SEEK_SET) != 0)
 		printf("Seek error\n");
-	fread(buff,8,1,fp);
-	for(int i=0; i<8; i++) {
+	fread(buff,NBYTE,1,fp);
+	for(int i=0; i<NBYTE; i++) {
     	sprintf(tmp,"%02x", (buff[i] & 0xff));
     	str = strcat(str,tmp);
 	}
@@ -122,10 +127,10 @@ void populateDB(FILE* fp, mpz_t n, mpz_t e) {
 		// y^e mod n
 		mpz_set_ui(tmp1,i+1);
 		mpz_powm(tmp2,tmp1,e,n);
-		fp_write(fp, i*8, tmp2);
+		fp_write(fp, i*NBYTE, tmp2);
 		if(DEBUG) {
-			fp_read(fp, i*8, tmp3);
-			gmp_printf("\t[%d]: %Zx\n",i,tmp3); 
+			fp_read(fp, i*NBYTE, tmp3);
+			gmp_printf("\t[%d]: %Zx\n",i,tmp3);
 		}
 	}
 	mpz_clears(tmp1,tmp2,tmp3,NULL);
@@ -137,7 +142,7 @@ void printDB(FILE* fp) {
 	mpz_t num;
 	mpz_init(num);
 	for(int i=0; i<MLD; i++) {
-		fp_read(fp, i*8, num);
+		fp_read(fp, i*NBYTE, num);
 		if(DEBUG) { gmp_printf("\t[%d]: %Zx\n",i,num); }
 	}
 	if(DEBUG) { printf("-------------------------------------\n"); }
@@ -170,7 +175,7 @@ void findEqualPos(FILE* fp,mpz_t e,mpz_t n,mpz_t c,int *x,int *y) {
 		// read small from file
 		for(int j=0; j<MLD; j++) {
 			if(DEBUG) { printf("\t[i: %d - j: %d]\n",i,j); }
-			fp_read(fp,j*8,small);
+			fp_read(fp,j*NBYTE,small);
 			if(mpz_cmp(giant,small)==0) {
 				*x = i+1;
 				*y = j+1;
@@ -188,5 +193,5 @@ void findEqualPos(FILE* fp,mpz_t e,mpz_t n,mpz_t c,int *x,int *y) {
 void removeFiles() {
 	remove(LIST);
 	remove(SORTED);
-	return;	
+	return;
 }
