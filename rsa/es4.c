@@ -9,7 +9,17 @@
  * - save them into a file
  * - order them into the file
  * - binary search using c*(x^-e) mod n
+ *
+ * UPDATE:
+ * In order to speed up process we'll use rsa16()
+ * in order to produce a 16bit key pair.
+ * MLD is set to 1000.
+ *
+ * NOTE that to reproduce this attack, m (so, c too) HAS TO BE LESS THAN n.
+ *
+ * Thanks to @cdzeno for the original RSA key generation.
  */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -17,8 +27,10 @@
 #include <string.h>
 #include <gmp.h>
 
-#define DEBUG 1
-#define MLD 100000
+#include "rsa16.c"
+
+#define DEBUG 0
+#define MLD 1000
 #define LIST "list.bin"
 #define SORTED "sorted.bin"
 #define WRITE "wb"
@@ -31,42 +43,47 @@ void fp_write(FILE* fp, long pos, mpz_t num);
 void populateDB(FILE* fp, mpz_t n, mpz_t e);
 void sortDB(FILE* out, FILE* in);
 void printDB(FILE* fp);
-void findEqual(FILE* sorted,int x,mpz_t yval);
+void findEqualPos(FILE* fp, mpz_t e, mpz_t n, mpz_t c, int *x, int *y);
 
 void removeFiles();
 
 int main(void) {
 	FILE *file,*sorted;
-	int a,b,x;
-	mpz_t n,e,c,m,yval,tmpa,tmpb;
-	mpz_inits(n,e,c,m,tmpa,yval,tmpb,NULL);
-	mpz_set_str(n,"618240007109027021",10);
-	mpz_set_str(e,"65537",10);
-	mpz_set_str(c,"254665136275622757",10);
+	int x,y;
+	mpz_t n,e,c,m,tmpa,tmpb;
+	mpz_inits(n,e,c,m,tmpa,tmpb,NULL);
+	//mpz_set_str(n,"618240007109027021",10);
+	// mpz_set_str(e,"65537",10);
+	// mpz_set_str(c,"254665136275622757",10);
+
+	// SPEED UP PROCESS
+	// RSA with 16bit key
+	rsa16pub(n,e);
+	mpz_set_str(m,"5234",10);
+	gmp_printf("M: %Zd\n", m);
+	// C = m^e mod n
+	mpz_powm(c,m,e,n);
 
 	removeFiles();
 	populateDB(file, n, e);
-	// printDB(file);
+	printDB(file);
 	sortDB(sorted,file);
-	findEqual(sorted,x,yval);
+	findEqualPos(sorted,e,n,c,&x,&y);
 
-	
-	// if(findEqualsPos(vec1,vec2,a,b))
-	// 	return 1;
+	printf("-------------------- RESULT  --------------------\n");
+	printf("x: %d - y: %d\n", x,y);
 
-	if(DEBUG) { printf("a: %d - b: %d\n", a,b); }
-
-	// At this point we have vec1[a]==vec2[b]:
-	// c*a^(-e) mod n == b^e mod n
-	// => C = b^e * a^e = (a*b)^e
-	// => M = a*b
-	mpz_set_ui(tmpa,a);
-	mpz_set_ui(tmpb,b);
+	// At this point we have big[x]==small[y]:
+	// c*x^(-e) mod n == y^e mod n
+	// => C = y^e * x^e = (x*y)^e
+	// => M = x*y
+	mpz_set_ui(tmpa,x);
+	mpz_set_ui(tmpb,y);
 	mpz_mul(m,tmpa,tmpb);
 	mpz_mod(m, m, n);
-	gmp_printf("M: %Zd\n", m);
+	gmp_printf("found M: %Zd\n", m);
 
-	mpz_clears(n,e,c,m,tmpa,yval,tmpb,NULL);
+	mpz_clears(n,e,c,m,tmpa,tmpb,NULL);
 	return 0;
 }
 
@@ -104,6 +121,8 @@ void populateDB(FILE* fp, mpz_t n, mpz_t e) {
 	mpz_t tmp1,tmp2,tmp3;
 	mpz_inits(tmp1,tmp2,tmp3,NULL);
 	for(int i=0; i<MLD; i++) {
+		// Build small step:
+		// y^e mod n
 		mpz_set_ui(tmp1,i+1);
 		mpz_powm(tmp2,tmp1,e,n);
 		fp_write(fp, i*8, tmp2);
@@ -122,7 +141,7 @@ void printDB(FILE* fp) {
 	mpz_init(num);
 	for(int i=0; i<MLD; i++) {
 		fp_read(fp, i*8, num);
-		gmp_printf("\t[%d]: %Zx\n",i,num);
+		if(DEBUG) { gmp_printf("\t[%d]: %Zx\n",i,num); }
 	}
 	if(DEBUG) { printf("-------------------------------------\n"); }
 }
@@ -136,7 +155,36 @@ void sortDB(FILE* out, FILE* in) {
 	return;
 }
 
-void findEqual(FILE* sorted,int x,mpz_t yval) {
+void findEqualPos(FILE* fp,mpz_t e,mpz_t n,mpz_t c,int *x,int *y) {
+	if(DEBUG) { printf("------ DEBUGGING  findEqualPos() ------\n"); }
+	// Build giant step:
+	// c*(x^-e) mod n
+	// ne contains -e
+	mpz_t ne,tmp,giant,small;
+	mpz_inits(ne,tmp,giant,small,NULL);
+	mpz_neg(ne,e);
+	for(int i=0; i<MLD; i++) {
+		mpz_set_ui(tmp,i+1);
+		// giant = c * i^(-e) mod n
+		mpz_powm(giant,tmp,ne,n);
+		mpz_mul(giant,giant,c);
+		mpz_mod(giant, giant, n);
+
+		// read small from file
+		for(int j=0; j<MLD; j++) {
+			if(DEBUG) { printf("\t[i: %d - j: %d]\n",i,j); }
+			fp_read(fp,j*8,small);
+			if(mpz_cmp(giant,small)==0) {
+				*x = i+1;
+				*y = j+1;
+				if(DEBUG) { gmp_printf("\tGiant: %Zd\n\tSmall: %Zd\n",giant,small); }
+				mpz_clears(ne,tmp,giant,small,NULL);
+				return;
+			}
+		}
+	}
+	mpz_clears(ne,tmp,giant,small,NULL);
+	if(DEBUG) { printf("-------------------------------------\n"); }
 	return;
 }
 
