@@ -90,7 +90,9 @@ int main(void) {
 
 void fp_write(FILE* fp, long pos, mpz_t num) {
 	fp = fopen(LIST, APPEND);
-	char *buff = (char*) malloc(sizeof(char) * NBYTE);
+	int plusone = NBYTE + 1;
+	char *buff = (char*) malloc(sizeof(char) * plusone);
+	buff[0] = '\0';
 	mpz_export(buff, NULL, 1, NBYTE, 1, 0, num);
 	fwrite(buff,sizeof(buff),1,fp);
 	free(buff);
@@ -100,10 +102,10 @@ void fp_write(FILE* fp, long pos, mpz_t num) {
 void fp_read(FILE* fp, long pos, mpz_t num) {
 	fp = fopen(LIST, READ);
 	int plusone = NBYTE + 1;
-	char *buff = (char*) malloc(sizeof(char) * NBYTE);
+	char *buff = (char*) malloc(sizeof(char) * plusone);
 	char *tmp = (char*) malloc(sizeof(char) * 2);
 	char *str = (char*) malloc(sizeof(char) * plusone);
-	str[0] = '\0';
+	str[0] = buff[0] = '\0';
 	if(fseek(fp, pos, SEEK_SET) != 0)
 		printf("Seek error\n");
 	fread(buff,NBYTE,1,fp);
